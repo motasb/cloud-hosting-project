@@ -3,19 +3,26 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-color: #efefef;
+  --font-geist-sans: 'Geist', sans-serif;
+  --font-geist-mono: 'Geist Mono', monospace;
+  --font-kufi: 'Noto Kufi Arabic', sans-serif;
 }
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg-color);
+  font-family: var(--font-geist-sans);
+}
+*{
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+.fix-height{
+  min-height: calc(100vh - 150px);
+}
+.overflow-height{
+  height: calc(100vh - 150px);
+}
+button:disabled{
+  cursor:not-allowed;
 }
