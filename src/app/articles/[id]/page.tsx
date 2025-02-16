@@ -1,22 +1,45 @@
-import { getSingleArticle } from "@/apiCalls/articleApiCall";
+// import { getSingleArticle } from "@/apiCalls/articleApiCall";
 import AddCommentForm from "@/components/comments/AddCommentForm";
 import CommentItem from "@/components/comments/CommentItem";
+import prisma from "@/utils/db";
 import { SingleArticle } from "@/utils/types";
 import { verifyTokenForPage } from "@/utils/verifyToken";
 import { cookies } from "next/headers";
+import { notFound } from "next/navigation";
 
 interface SingleArticlePageProps {
   params: Promise<{ id: string }>;
 }
 
 const SingleArticlePage = async ({ params }: SingleArticlePageProps) => {
-  const {id} = await params
-  const article: SingleArticle = await getSingleArticle(id);
+  const {id} = await params;
   const token = (await cookies()).get("jwtToken")?.value || "";
   const user = verifyTokenForPage(token);
 
-  
+  // backend api 
+  // const article: SingleArticle = await getSingleArticle(id);
 
+  // prisma query becouse server component
+  const article = await prisma.article.findUnique({where:{id: parseInt(id)} ,
+        include:{
+            comments:{
+                include:{
+                    user: {
+                        select:{
+                            username:true
+                        }
+                    }
+                },
+                orderBy: {
+                    createdAt:"desc"
+                }
+            },
+        }}) as SingleArticle;
+
+        if(!article){
+          notFound();
+        }
+  
   return (
     <section className="fix-height container m-auto w-full px-5 pt-8 md:w-3/4">
       <div className="bg-white p-7 rounded-lg mb-7">

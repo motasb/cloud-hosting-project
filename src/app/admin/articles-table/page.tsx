@@ -1,10 +1,7 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { Article } from "@prisma/client";
 import { getArticles, getArticleCount } from "@/apiCalls/articleApiCall";
 import Pagination from "@/components/articles/Pagination";
 import { ARTICLE_PER_PAGE } from "@/utils/constants";
-import { verifyTokenForPage } from "@/utils/verifyToken";
 import DeleteArticleBtn from "./DeleteArticleBtn";
 import Link from "next/link";
 
@@ -15,12 +12,6 @@ interface AdminArticalesTableProps {
 const AdminArticalesTable = async ({ searchParams }: AdminArticalesTableProps) => {
   // استخدام await لاستخراج قيمة pageNumber
   const { pageNumber } = await searchParams;
-
-
-  const token = (await cookies()).get("jwtToken")?.value || "";
-  if (!token) redirect("/");
-  const user = verifyTokenForPage(token);
-  if (user?.isAdmin === false) return redirect("/");
 
   const articles: Article[] = await getArticles(pageNumber);
   const count: number = await getArticleCount();

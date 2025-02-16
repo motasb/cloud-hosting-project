@@ -1,5 +1,4 @@
 import { getAllComments } from '@/apiCalls/adminApiCall';
-import { verifyTokenForPage } from '@/utils/verifyToken';
 import { Comment } from '@prisma/client';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -9,8 +8,7 @@ import Link from 'next/link';
 const AdminCommentsTable = async () => {
     const token = (await cookies()).get("jwtToken")?.value || "";
     if(!token) redirect("/");
-    const user = verifyTokenForPage(token);
-    if(user?.isAdmin === false)return redirect("/");
+
 
     const comments:Comment[] = await getAllComments(token);
 
