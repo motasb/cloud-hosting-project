@@ -4,6 +4,7 @@ import { verifyToken } from "@/utils/verifyToken";
 import { UpdateUserDto } from "@/utils/dtos";
 import bcrypt from "bcryptjs";
 import { updateUserSchema } from "@/utils/validationSchemas";
+import { setCookie } from "@/utils/generateToken";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -146,8 +147,14 @@ export async function PUT(request: NextRequest, { params }: Props) {
         isAdmin: true,
       },
     });
+    
+    const cookie = setCookie({
+      id:updatedUser.id,
+      username:updatedUser.username,
+      isAdmin:updatedUser.isAdmin,
+    })
 
-    return NextResponse.json(updatedUser, { status: 200 });
+    return NextResponse.json(updatedUser, { status: 200 , headers: {"Set-Cookie": cookie} });
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {

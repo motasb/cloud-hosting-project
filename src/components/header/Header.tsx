@@ -4,6 +4,7 @@ import Navbar from "./Navbar";
 import { cookies } from "next/headers";
 import { verifyTokenForPage } from "@/utils/verifyToken";
 import LogoutButton from "./LogoutButton";
+
 const Header = async () => {
   const token = (await cookies()).get("jwtToken")?.value || "";
   const user = verifyTokenForPage(token);
@@ -13,9 +14,9 @@ const Header = async () => {
       <div className={styles.right}>
         {user ? (
           <>
-            <strong className="text-blue-800 md:text-xl capitalize">
+            <Link href={`/profile/${user.id}`} className="text-blue-800 md:text-xl capitalize font-semibold">
               {user?.username}
-            </strong>
+            </Link>
             <LogoutButton/>
           </>
         ) : (

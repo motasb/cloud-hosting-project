@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       {...newUser, message: "register & authenticated" } , 
     {
       status:201,
-      headers:{ "Set-Cookie": cookie}
+      headers:{"Set-Cookie": cookie}
     });
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
