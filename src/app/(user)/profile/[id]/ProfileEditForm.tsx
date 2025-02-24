@@ -37,7 +37,7 @@ const ProfileEditForm = ({ user, setOpen }: ProfileEditFormProps) => {
       await axios.put(`${DOMAIN}/api/users/profile/${user.id}`, 
         updatedUser,
       );
-      toast.success(" Article Updated");
+      toast.success(" User Updated");
       router.replace(`/profile/${user.id}`);
       router.refresh();
       setLoading(false);

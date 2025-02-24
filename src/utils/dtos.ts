@@ -23,6 +23,7 @@ export interface UpdateUserDto {
     username?: string;
     email?: string;
     password?: string;
+    photoId?:string;
 }
 
 export interface CreateCommentDto {

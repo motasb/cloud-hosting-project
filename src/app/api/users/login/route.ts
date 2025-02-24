@@ -23,26 +23,34 @@ try {
     if(!user){
         return NextResponse.json({message:"invalid email or password"} , {status:404});
     }
-    
+
     const isPasswordMatch = await bcrypt.compare(body.password , user.password);
     if(!isPasswordMatch){
         return NextResponse.json({message: "invalid email or password"} , {status:400});
     }
 
-
-    const cookie = setCookie({
-        id: user.id,
-        isAdmin:user.isAdmin,
-        username:user.username,
-    });
-
-
-    return NextResponse.json(
-        {message:"Authenticated"} ,
-        {status:200,
-        headers:{ "Set-Cookie": cookie}
+    if (!user.isVerified) {
+        return NextResponse.json(
+            { message: "Please verify your email before logging in." }, 
+            { status: 400 }
+        );
     }
-    )
+    
+
+    const cookie = setCookie(
+        {
+          id: user.id,
+          isAdmin: user.isAdmin,    
+          username: user.username,
+        },
+        user.isVerified
+      );
+  
+      const headers: HeadersInit = cookie ? { "Set-Cookie": cookie } : {};
+  
+      return NextResponse.json({ message: "Authenticated" }, { status: 200, headers });
+  
+        
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 } catch (error) {
     return NextResponse.json(

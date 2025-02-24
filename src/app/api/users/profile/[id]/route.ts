@@ -5,6 +5,7 @@ import { UpdateUserDto } from "@/utils/dtos";
 import bcrypt from "bcryptjs";
 import { updateUserSchema } from "@/utils/validationSchemas";
 import { setCookie } from "@/utils/generateToken";
+import cloudinary from "@/lib/cloudinary";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -34,6 +35,9 @@ export async function DELETE(request: NextRequest, { params }: Props) {
 
     if (userFromToken !== null && userFromToken.id === user.id) {
       // deleting the user
+      if (user.photoId) {
+        await cloudinary.uploader.destroy(user.photoId);
+      }      
       await prisma.user.delete({ where: { id: parseInt(id) } });
 
       return NextResponse.json(
@@ -106,7 +110,6 @@ export async function GET(request: NextRequest, { params }: Props) {
 
 export async function PUT(request: NextRequest, { params }: Props) {
   const {id} = await params
-
   try {
     const user = await prisma.user.findUnique({
       where: { id: parseInt(id) },
@@ -127,6 +130,18 @@ export async function PUT(request: NextRequest, { params }: Props) {
     if(!validation.success){
       return NextResponse.json({message:validation.error.errors[0].message}, {status:400});
     }
+
+    // console.log(`public id = ${user.photoId}`);
+    // Delete Photo From Cloudinary
+    if (body.photoId && user.photoId) {
+      try {
+        await cloudinary.uploader.destroy(user.photoId);
+        console.log(user.photoId);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    
     if (body.password) {
       const salt = await bcrypt.genSalt(10);
       body.password = await bcrypt.hash(body.password, salt);
@@ -138,13 +153,16 @@ export async function PUT(request: NextRequest, { params }: Props) {
         username: body.username,
         email: body.email,
         password: body.password,
+        photoId:body.photoId
       },
       select: {
         id: true,
         email: true,
         username: true,
+        photoId:true,
         createdAt: true,
         isAdmin: true,
+        isVerified:true,
       },
     });
     
@@ -152,9 +170,11 @@ export async function PUT(request: NextRequest, { params }: Props) {
       id:updatedUser.id,
       username:updatedUser.username,
       isAdmin:updatedUser.isAdmin,
-    })
+    }, updatedUser.isVerified)
 
-    return NextResponse.json(updatedUser, { status: 200 , headers: {"Set-Cookie": cookie} });
+    const headers: HeadersInit = cookie ? { "Set-Cookie": cookie } : {};
+
+    return NextResponse.json(updatedUser, { status: 200 , headers});
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {

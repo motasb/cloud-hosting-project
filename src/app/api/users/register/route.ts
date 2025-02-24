@@ -3,7 +3,9 @@ import { RegisterUserDto } from "@/utils/dtos";
 import { registerSchema } from "@/utils/validationSchemas";
 import { NextResponse, NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
-import { setCookie } from "@/utils/generateToken";
+import crypto from "crypto";
+import { DOMAIN } from "@/utils/constants";
+import { sendEmail } from "@/lib/sendEmail";
 
 /**
  * @method POST
@@ -30,33 +32,47 @@ export async function POST(request: NextRequest) {
     const salt = await bcrypt.genSalt(10);
     body.password =  await bcrypt.hash(body.password , salt);
 
+
     const newUser = await prisma.user.create({
-        data:{
-            username:body.username,
-            email: body.email,
-            password: body.password
-        },
-        select:{
-            username:true,
-            id:true,
-            isAdmin:true,
-        }
+      data: {
+        username: body.username,
+        email: body.email,
+        password: body.password,
+      },
+      select: {
+        id: true,
+        username: true,
+        isAdmin: true,
+        isVerified: true,
+        email:true,
+      }
     });
+    // create verificationToken 
 
-
-    const cookie = setCookie({
-      id:newUser.id,
-      username:newUser.username,
-      isAdmin:newUser.isAdmin,
-    })
-
-    return NextResponse.json(
-      {...newUser, message: "register & authenticated" } , 
-    {
-      status:201,
-      headers:{"Set-Cookie": cookie}
+    const verificationToken = await prisma.verificationToken.create({
+      data: {
+        userId: newUser.id,
+        token: crypto.randomBytes(32).toString("hex"),
+        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24), // انتهاء بعد 24 ساعة
+      },
     });
+    // sendToken
+    const link = `${DOMAIN}/api/users/verify/${newUser.id}/${verificationToken.token}`;
+    const htmlTemplate = `
+    <div>
+        <p> Click on the link below to verify your email</p>
+        <a href="${link}"> Verify</a>
+    </div>`;
+    await sendEmail(newUser.email , "Verify Your Email" , htmlTemplate);
 
+
+
+      return NextResponse.json(
+        { message: "Registration successful! Please verify your email." },
+        { status: 201 }
+      );
+    
+    
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     return NextResponse.json(

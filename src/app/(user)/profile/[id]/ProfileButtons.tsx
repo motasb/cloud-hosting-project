@@ -10,7 +10,6 @@ import { User } from "@prisma/client";
 
 interface ProfileButtonsProps{
   user: User;
-
 }
 
 const ProfileButtons = ({user}:ProfileButtonsProps) => {
